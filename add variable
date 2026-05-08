@@ -1,0 +1,7 @@
+# Update the code below this line to solve the problem
+# Declare variables and assign values
+a = 23
+b = 20
+
+# Output the sum of a and b
+print(a + b)
