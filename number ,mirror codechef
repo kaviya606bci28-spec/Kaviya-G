@@ -1,0 +1,6 @@
+# cook your dish here
+# Read the input as an integer
+n = int(input())
+
+# Print the integer
+print(n)
