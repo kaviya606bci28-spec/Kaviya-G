@@ -1,0 +1,4 @@
+# Update your code below this line
+greeting="numerotres"
+len_string=len(greeting)
+print(len_string)
