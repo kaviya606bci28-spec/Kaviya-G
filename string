@@ -1,0 +1,6 @@
+# Update your code below this line# Declare the variables and assign strings to them
+a = "Learning"
+b = "is fun!"
+
+# Display the variables in a single line
+print(a, b)
