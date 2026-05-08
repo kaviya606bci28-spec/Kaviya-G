@@ -1,0 +1,6 @@
+# Update your code below this line
+# Create a string variable named fruit and assign the value "Apple" to it
+fruit = "Apple"
+
+# Output fruit to the console
+print(fruit)
