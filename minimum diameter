@@ -1,0 +1,113 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Helper math macro configuration
+int max(int a, int b) {
+    return (a > b) ? a : b;
+}
+
+// Graph structural management block definitions
+typedef struct {
+    int* heads;
+    int* nexts;
+    int* to;
+    int edgeCount;
+} Graph;
+
+void initGraph(Graph* g, int numNodes, int numEdges) {
+    g->heads = (int*)malloc(numNodes * sizeof(int));
+    memset(g->heads, -1, numNodes * sizeof(int));
+    g->nexts = (int*)malloc(2 * numEdges * sizeof(int));
+    g->to = (int*)malloc(2 * numEdges * sizeof(int));
+    g->edgeCount = 0;
+}
+
+void addEdge(Graph* g, int u, int v) {
+    g->to[g->edgeCount] = v;
+    g->nexts[g->edgeCount] = g->heads[u];
+    g->heads[u] = g->edgeCount++;
+    
+    g->to[g->edgeCount] = u;
+    g->nexts[g->edgeCount] = g->heads[v];
+    g->heads[v] = g->edgeCount++;
+}
+
+void freeGraph(Graph* g) {
+    free(g->heads);
+    free(g->nexts);
+    free(g->to);
+}
+
+// Dual pass high-speed BFS module to evaluate max paths inside a tree structure
+void runBFS(Graph* g, int startNode, int numNodes, int* farthestNode, int* maxDist) {
+    int* dist = (int*)malloc(numNodes * sizeof(int));
+    for (int i = 0; i < numNodes; i++) dist[i] = -1;
+    
+    int* queue = (int*)malloc(numNodes * sizeof(int));
+    int head = 0, tail = 0;
+    
+    dist[startNode] = 0;
+    queue[tail++] = startNode;
+    
+    *farthestNode = startNode;
+    *maxDist = 0;
+    
+    while (head < tail) {
+        int curr = queue[head++];
+        
+        if (dist[curr] > *maxDist) {
+            *maxDist = dist[curr];
+            *farthestNode = curr;
+        }
+        
+        for (int e = g->heads[curr]; e != -1; e = g->nexts[e]) {
+            int neighbor = g->to[e];
+            if (dist[neighbor] == -1) {
+                dist[neighbor] = dist[curr] + 1;
+                queue[tail++] = neighbor;
+            }
+        }
+    }
+    
+    free(dist);
+    free(queue);
+}
+
+// Function to find tree diameter using 2 BFS calls
+int getTreeDiameter(int** edges, int edgesSize, int numNodes) {
+    if (numNodes <= 1) return 0;
+    
+    Graph g;
+    initGraph(&g, numNodes, edgesSize);
+    
+    for (int i = 0; i < edgesSize; i++) {
+        addEdge(&g, edges[i][0], edges[i][1]);
+    }
+    
+    int nodeA = 0, nodeB = 0;
+    int d1 = 0, diameter = 0;
+    
+    // First BFS pass: Find the absolute farthest node from any random node (node 0)
+    runBFS(&g, 0, numNodes, &nodeA, &d1);
+    // Second BFS pass: Find the max diameter path starting from nodeA
+    runBFS(&g, nodeA, numNodes, &nodeB, &diameter);
+    
+    freeGraph(&g);
+    return diameter;
+}
+
+int minimumDiameterAfterMerge(int** edges1, int edges1Size, int* edges1ColSize, int** edges2, int edges2Size, int* edges2ColSize) {
+    int n = edges1Size + 1; // Number of nodes in first tree
+    int m = edges2Size + 1; // Number of nodes in second tree
+    
+    int d1 = getTreeDiameter(edges1, edges1Size, n);
+    int d2 = getTreeDiameter(edges2, edges2Size, m);
+    
+    // Calculate radius components via ceiling integer equivalence equations
+    int r1 = (d1 + 1) / 2;
+    int r2 = (d2 + 1) / 2;
+    
+    // Return max of d1, d2 or combined center connection paths
+    return max(max(d1, d2), r1 + r2 + 1);
+}
