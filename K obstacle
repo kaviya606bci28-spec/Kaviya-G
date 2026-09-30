@@ -1,0 +1,84 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Custom utility function to compute absolute values safely
+long long customAbs(long long val) { return (val < 0) ? -val : val; }
+
+// Max Heap helper functionalities to maintain the kth elements
+void swapHeap(long long* a, long long* b) {
+    long long temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+void heapifyMaxDown(long long* heap, int size, int idx) {
+    int largest = idx;
+    int left = 2 * idx + 1;
+    int right = 2 * idx + 2;
+
+    if (left < size && heap[left] > heap[largest]) {
+        largest = left;
+    }
+    if (right < size && heap[right] > heap[largest]) {
+        largest = right;
+    }
+    if (largest != idx) {
+        swapHeap(&heap[idx], &heap[largest]);
+        heapifyMaxDown(heap, size, largest);
+    }
+}
+
+void heapifyMaxUp(long long* heap, int idx) {
+    while (idx > 0) {
+        int parent = (idx - 1) / 2;
+        if (heap[idx] > heap[parent]) {
+            swapHeap(&heap[idx], &heap[parent]);
+            idx = parent;
+        } else {
+            break;
+        }
+    }
+}
+
+int* resultsArray(int** queries, int queriesSize, int* queriesColSize, int k,
+                  int* returnSize) {
+    // Dynamic output array storage configuration setup
+    int* result = (int*)malloc(queriesSize * sizeof(int));
+    *returnSize = queriesSize;
+
+    // Max Heap array to store at most k nearest obstacle distances
+    long long* maxHeap = (long long*)malloc(k * sizeof(long long));
+    int heapSize = 0;
+
+    for (int i = 0; i < queriesSize; i++) {
+        long long x = queries[i][0];
+        long long y = queries[i][1];
+
+        // Calculate Manhattan distance matrix |x| + |y|
+        long long dist = customAbs(x) + customAbs(y);
+
+        if (heapSize < k) {
+            // Heap capacity fill aagura varaikum push panrom
+            maxHeap[heapSize] = dist;
+            heapifyMaxUp(maxHeap, heapSize);
+            heapSize++;
+        } else if (dist < maxHeap[0]) {
+            // Heap size k vanchu, current distance max value vida chinna dhaan
+            // irundha replacement operation execute aagum
+            maxHeap[0] = dist;
+            heapifyMaxDown(maxHeap, heapSize, 0);
+        }
+
+        // Return peak element if heap contains exactly k nodes, otherwise drop
+        // -1
+        if (heapSize == k) {
+            result[i] = (int)maxHeap[0];
+        } else {
+            result[i] = -1;
+        }
+    }
+
+    // Free local heap buffer space tracking layout
+    free(maxHeap);
+    return result;
+}
