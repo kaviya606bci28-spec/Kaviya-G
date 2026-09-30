@@ -1,0 +1,123 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+// Quicksort framework unique signature identification mapping
+int compareSignatures(const void* a, const void* b) {
+    long long la = *(const long long*)a;
+    long long lb = *(const long long*)b;
+    if (la < lb) return -1;
+    if (la > lb) return 1;
+    return 0;
+}
+
+// First half-la irundhu full palindrome number convert panra function
+long long generatePalindrome(long long half, int n) {
+    long long palindrome = half;
+    long long temp = (n % 2 == 1) ? half / 10 : half;
+    while (temp > 0) {
+        palindrome = palindrome * 10 + (temp % 10);
+        temp /= 10;
+    }
+    return palindrome;
+}
+
+// Digits-ah extract panni, sort panni, oru unique unique signature create panrom
+long long createSignature(long long palindrome, int n) {
+    int digitCounts[10] = {0};
+    long long temp = palindrome;
+    
+    // Process every single digit index mapping
+    for (int i = 0; i < n; i++) {
+        digitCounts[temp % 10]++;
+        temp /= 10;
+    }
+    
+    long long signature = 0;
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < digitCounts[i]; j++) {
+            signature = signature * 10 + i;
+        }
+    }
+    return signature;
+}
+
+// Multi-set permutation math logic with leading-zero block elimination
+long long computeValidPermutations(long long signature, int n) {
+    long long fact[15];
+    fact[0] = 1;
+    for (int i = 1; i <= 12; i++) {
+        fact[i] = fact[i - 1] * i;
+    }
+
+    int digitCounts[10] = {0};
+    long long temp = signature;
+    int digitsExtracted = 0;
+    
+    while (temp > 0) {
+        digitCounts[temp % 10]++;
+        temp /= 10;
+        digitsExtracted++;
+    }
+    digitCounts[0] += (n - digitsExtracted); // Remaining padding elements are zeros
+
+    // 1. Total arrangements formula = n! / (c0! * c1! * ... * c9!)
+    long long denominatorTotal = 1;
+    for (int i = 0; i < 10; i++) {
+        denominatorTotal *= fact[digitCounts[i]];
+    }
+    long long totalPermutations = fact[n] / denominatorTotal;
+
+    // 2. Leading zero arrangements formula (if 0 exists) = (n-1)! / ((c0-1)! * c1! * ... * c9!)
+    long long invalidZeroPermutations = 0;
+    if (digitCounts[0] > 0) {
+        long long denominatorZero = 1;
+        for (int i = 0; i < 10; i++) {
+            if (i == 0) {
+                denominatorZero *= fact[digitCounts[0] - 1];
+            } else {
+                denominatorZero *= fact[digitCounts[i]];
+            }
+        }
+        invalidZeroPermutations = fact[n - 1] / denominatorZero;
+    }
+
+    // Valid unique numbers = Total arrangements - Invalid leading-zero numbers
+    return totalPermutations - invalidZeroPermutations;
+}
+
+long long countGoodIntegers(int n, int k) {
+    int halfLength = (n + 1) / 2;
+    long long startRange = 1;
+    for (int i = 0; i < halfLength - 1; i++) {
+        startRange *= 10;
+    }
+    long long endRange = startRange * 10 - 1;
+    
+    // Allocate space for tracking generated signatures
+    long long* uniqueSignatures = (long long*)malloc(100000 * sizeof(long long));
+    int signatureIndex = 0;
+    
+    // Step 1: Palindrome scan execution matrix
+    for (long long h = startRange; h <= endRange; h++) {
+        long long palindrome = generatePalindrome(h, n);
+        if (palindrome % k == 0) {
+            uniqueSignatures[signatureIndex++] = createSignature(palindrome, n);
+        }
+    }
+    
+    // Step 2: Duplicate entries delete panna tracking map data elements sort panrom
+    qsort(uniqueSignatures, signatureIndex, sizeof(long long), compareSignatures);
+    
+    // Step 3: Permutations count-ah unique blocks structures mttum iterate panni add panrom
+    long long totalGoodIntegersCount = 0;
+    for (int i = 0; i < signatureIndex; i++) {
+        if (i == 0 || uniqueSignatures[i] != uniqueSignatures[i - 1]) {
+            totalGoodIntegersCount += computeValidPermutations(uniqueSignatures[i], n);
+        }
+    }
+    
+    free(uniqueSignatures); // Memory cleaner check leak block free memory layout
+    return totalGoodIntegersCount;
+}
