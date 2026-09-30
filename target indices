@@ -1,0 +1,33 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int* targetIndices(int* nums, int numsSize, int target, int* returnSize) {
+    int count_less = 0;
+    int count_target = 0;
+    
+    // Single pass loop-la target-vida chinna engalaiyum, target counts-aiyum edukrom
+    for (int i = 0; i < numsSize; i++) {
+        if (nums[i] < target) {
+            count_less++;
+        } else if (nums[i] == target) {
+            count_target++;
+        }
+    }
+    
+    *returnSize = count_target;
+    
+    // Target illana empty list (NULL) return panrom
+    if (count_target == 0) {
+        return NULL;
+    }
+    
+    // Result array-ku exact space allocation panrom
+    int* result = (int*)malloc(count_target * sizeof(int));
+    
+    // Starting index-la irundhu target index list-ah fill panrom
+    for (int i = 0; i < count_target; i++) {
+        result[i] = count_less + i;
+    }
+    
+    return result;
+}
