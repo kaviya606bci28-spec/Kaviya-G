@@ -1,0 +1,52 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+char* sortSentence(char* s) {
+    // Array to hold pointers to the parsed words (1-indexed, so size 10 is enough for max 9 words)
+    char* words[10] = {NULL};
+    int maxIndex = 0;
+    
+    // Safety check: Create a local modifiable buffer copy to avoid modifying read-only string inputs
+    char buf[250];
+    strcpy(buf, s);
+    
+    // Split the sentence into tokens using white space delimiter
+    char* token = strtok(buf, " ");
+    
+    while (token != NULL) {
+        int len = strlen(token);
+        // The last character contains the 1-indexed position integer digit
+        int index = token[len - 1] - '0'; 
+        
+        if (index > maxIndex) {
+            maxIndex = index;
+        }
+        
+        // Allocate exact dynamic memory space for this specific word token segment
+        words[index] = (char*)malloc(len * sizeof(char));
+        
+        // Copy characters excluding the trailing numerical digit identifier
+        strncpy(words[index], token, len - 1);
+        words[index][len - 1] = '\0'; // Manual null-termination for valid C string format
+        
+        token = strtok(NULL, " ");
+    }
+    
+    // Allocate space on heap memory pool for the final reconstructed sentence string
+    char* result = (char*)malloc(250 * sizeof(char));
+    result[0] = '\0'; // FIXED: Initialize string buffer head with an explicit empty marker
+    
+    // Loop through the sorted indexing buckets to piece back the full string
+    for (int i = 1; i <= maxIndex; i++) {
+        if (words[i] != NULL) {
+            strcat(result, words[i]);
+            if (i < maxIndex) {
+                strcat(result, " "); // Append standard word separation space character
+            }
+            free(words[i]); // On-the-fly heap memory cleanup optimization
+        }
+    }
+    
+    return result;
+}
