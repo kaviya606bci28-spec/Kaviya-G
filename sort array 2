@@ -1,0 +1,32 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int* sortArrayByParityII(int* nums, int numsSize, int* returnSize) {
+    *returnSize = numsSize;
+    
+    int even_ptr = 0; // Tracks even indices (0, 2, 4, ...)
+    int odd_ptr = 1;  // Tracks odd indices (1, 3, 5, ...)
+    
+    while (even_ptr < numsSize && odd_ptr < numsSize) {
+        // Even index-la already even number-ae irundha, adhu correct slot, so skip 2 steps ahead
+        if (nums[even_ptr] % 2 == 0) {
+            even_ptr += 2;
+        } 
+        // Odd index-la already odd number-ae irundha, adhum correct slot, so skip 2 steps ahead
+        else if (nums[odd_ptr] % 2 != 0) {
+            odd_ptr += 2;
+        } 
+        // Rendu idathulaiyum mismatch irundha (Even-la odd-um, Odd-la even-um), swap panrom
+        else {
+            int temp = nums[even_ptr];
+            nums[even_ptr] = nums[odd_ptr];
+            nums[odd_ptr] = temp;
+            
+            // Swap pannadhuku apram rendu index-um correct slot-ku maariடும், so advance pointers
+            even_ptr += 2;
+            odd_ptr += 2;
+        }
+    }
+    
+    return nums;
+}
