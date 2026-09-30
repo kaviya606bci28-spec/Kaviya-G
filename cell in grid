@@ -1,0 +1,69 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_VAL 100
+
+// Helper utility to find the maximum between two numbers
+int max(int a, int b) {
+    return (a > b) ? a : b;
+}
+
+int maxScore(int** grid, int gridSize, int* gridColSize) {
+    int numRows = gridSize;
+    int numCols = gridColSize[0];
+    int maxMasks = 1 << numRows; // Total bitmask combinations (2^numRows)
+
+    // Dynamic bitmap tracking: rowsContaining[v] will have the i-th bit set if row 'i' contains value 'v'
+    int rowsContaining[MAX_VAL + 1];
+    memset(rowsContaining, 0, sizeof(rowsContaining));
+
+    for (int r = 0; r < numRows; r++) {
+        for (int c = 0; c < numCols; c++) {
+            int val = grid[r][c];
+            rowsContaining[val] |= (1 << r);
+        }
+    }
+
+    // DP array size allocation setup: dp[mask] stores the max score using a chosen subset of rows
+    int* dp = (int*)malloc(maxMasks * sizeof(int));
+    for (int i = 0; i < maxMasks; i++) {
+        dp[i] = -1; // -1 denotes unvisited state
+    }
+    dp[0] = 0; // Base state: 0 score achieved with no rows picked
+
+    // Process each grid value from maximum (100) down to minimum (1)
+    for (int v = MAX_VAL; v >= 1; v--) {
+        if (rowsContaining[v] == 0) continue; // If value is not present in the grid, skip it
+
+        // Iterate backwards through the masks to prevent using the current value 'v' multiple times
+        for (int mask = maxMasks - 1; mask >= 0; mask--) {
+            if (dp[mask] == -1) continue;
+
+            // Try picking value 'v' from any valid row that contains it
+            int validRows = rowsContaining[v];
+            while (validRows > 0) {
+                // Isolate lowest set bit (Extract row index)
+                int lowestBit = validRows & -validRows;
+                int rowIdx = __builtin_ctz(lowestBit); // Built-in high speed bit count trailing zeros
+                
+                // If this row has not been taken yet in the current mask configuration
+                if ((mask & (1 << rowIdx)) == 0) {
+                    int nextMask = mask | (1 << rowIdx);
+                    dp[nextMask] = max(dp[nextMask], dp[mask] + v);
+                }
+                
+                validRows ^= lowestBit; // Clear the processed bit
+            }
+        }
+    }
+
+    // Scan through all computed mask values to find the global optimum maximum score
+    int finalMaxScore = 0;
+    for (int i = 0; i < maxMasks; i++) {
+        finalMaxScore = max(finalMaxScore, dp[i]);
+    }
+
+    free(dp); // Dynamic cleanup memory framework optimization
+    return finalMaxScore;
+}
