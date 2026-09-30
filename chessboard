@@ -1,0 +1,14 @@
+#include <stdio.h>
+#include <stdbool.h>
+
+bool checkTwoChessboards(char* coordinate1, char* coordinate2) {
+    // Coordinate 1 oda column and row ascii values sum check panrom
+    int color1 = coordinate1[0] + coordinate1[1];
+    
+    // Coordinate 2 oda column and row ascii values sum check panrom
+    int color2 = coordinate2[0] + coordinate2[1];
+    
+    // Rendu components odd/even remainder matrix balance value match aana return true
+    // Modulo 2 properties identity pattern directly yields square color state
+    return (color1 % 2) == (color2 % 2);
+}
