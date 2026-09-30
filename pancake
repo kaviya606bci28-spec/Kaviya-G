@@ -1,0 +1,50 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+// Subarray arr[0...k-1] ah reverse panra helper function
+void flip(int* arr, int k) {
+    int start = 0, end = k - 1;
+    while (start < end) {
+        int temp = arr[start];
+        arr[start] = arr[end];
+        arr[end] = temp;
+        start++;
+        end--;
+    }
+}
+
+int* pancakeSort(int* arr, int arrSize, int* returnSize) {
+    // Dynamic output array storage configuration setup
+    // Maximum flips required bounds always capped under 2 * arrSize
+    int* result = (int*)malloc(2 * arrSize * sizeof(int));
+    int resIdx = 0;
+    
+    // Process every single element from largest targeted value down to 1
+    for (int currSize = arrSize; currSize > 1; currSize--) {
+        // Step 1: Current sub-segment loop kula irukra maximum element index ah find panrom
+        int maxIdx = 0;
+        for (int i = 1; i < currSize; i++) {
+            if (arr[i] > arr[maxIdx]) {
+                maxIdx = i;
+            }
+        }
+        
+        // Target element already end position-la irundha operations theva illa, skip it
+        if (maxIdx == currSize - 1) {
+            continue;
+        }
+        
+        // Step 2: Max element 0-th position la illana, flip panni anga kondu varom
+        if (maxIdx != 0) {
+            result[resIdx++] = maxIdx + 1;
+            flip(arr, maxIdx + 1);
+        }
+        
+        // Step 3: Ippo max element 0-th index la irukradhala, full range flip panni end-ku anuprom
+        result[resIdx++] = currSize;
+        flip(arr, currSize);
+    }
+    
+    *returnSize = resIdx;
+    return result;
+}
