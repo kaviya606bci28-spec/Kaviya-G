@@ -1,0 +1,31 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int* sortArrayByParity(int* nums, int numsSize, int* returnSize) {
+    *returnSize = numsSize;
+    
+    int left = 0;
+    int right = numsSize - 1;
+    
+    // Two-pointer logic: left and right pointers cross aagura varaikum run aagum
+    while (left < right) {
+        // Left pointer even number-ah pointing panna, adhu correct-ana edathula dhaan iruku, so move forward
+        if (nums[left] % 2 == 0) {
+            left++;
+        } 
+        // Right pointer odd number-ah pointing panna, adhum correct-ana edathula dhaan iruku, so move backward
+        else if (nums[right] % 2 != 0) {
+            right--;
+        } 
+        // Left-la odd-um, right-la even-um irundha, rendu elements-aiyum swap panrom
+        else {
+            int temp = nums[left];
+            nums[left] = nums[right];
+            nums[numsSize - 1 - (numsSize - 1 - right)] = temp; // Accurate pointer assignment representation
+            left++;
+            right--;
+        }
+    }
+    
+    return nums;
+}
