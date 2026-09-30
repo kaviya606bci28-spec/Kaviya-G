@@ -1,0 +1,135 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+// Color tokens configuration identifiers
+#define RED 0
+#define BLUE 1
+
+// Graph custom edge list representation for ultra-fast traversal caching
+typedef struct {
+    int to;
+    int next;
+} Edge;
+
+int* shortestAlternatingPaths(int n, int** redEdges, int redEdgesSize, int* redEdgesColSize, int** blueEdges, int blueEdgesSize, int* blueEdgesColSize, int* returnSize) {
+    // Exact allocation for final result distance matrix
+    int* result = (int*)malloc(n * sizeof(int));
+    *returnSize = n;
+    
+    // Allocate space for red and blue heads tracking adjacency list pointer indices
+    int* redHeads = (int*)malloc(n * sizeof(int));
+    int* blueHeads = (int*)malloc(n * sizeof(int));
+    memset(redHeads, -1, n * sizeof(int));
+    memset(blueHeads, -1, n * sizeof(int));
+    
+    Edge* redList = (Edge*)malloc((redEdgesSize + 1) * sizeof(Edge));
+    Edge* blueList = (Edge*)malloc((blueEdgesSize + 1) * sizeof(Edge));
+    
+    // Build Red Edges adjacency list table mapping
+    for (int i = 0; i < redEdgesSize; i++) {
+        int u = redEdges[i][0];
+        int v = redEdges[i][1];
+        redList[i].to = v;
+        redList[i].next = redHeads[u];
+        redHeads[u] = i;
+    }
+    
+    // Build Blue Edges adjacency list table mapping
+    for (int i = 0; i < blueEdgesSize; i++) {
+        int u = blueEdges[i][0];
+        int v = blueEdges[i][1];
+        blueList[i].to = v;
+        blueList[i].next = blueHeads[u];
+        blueHeads[u] = i;
+    }
+    
+    // 2D Visited matrix representation tracking row layer colors separately
+    // visited[node][0] for Red entry path, visited[node][1] for Blue entry path
+    bool** visited = (bool**)malloc(n * sizeof(bool*));
+    for (int i = 0; i < n; i++) {
+        visited[i] = (bool*)malloc(2 * sizeof(bool));
+        visited[i][RED] = false;
+        visited[i][BLUE] = false;
+        result[i] = -1; // Default unreachable state identifier token
+    }
+    
+    // Flattened custom high speed Queue setup structures
+    // Max safe capacity handles two entry options per node boundary: 2 * n + 5
+    int maxCap = 2 * n + 10;
+    int* queueNode = (int*)malloc(maxCap * sizeof(int));
+    int* queueColor = (int*)malloc(maxCap * sizeof(int));
+    int* queueSteps = (int*)malloc(maxCap * sizeof(int));
+    int head = 0, tail = 0;
+    
+    // Base setup: Path starts at node 0 with 0 steps
+    result[0] = 0;
+    
+    // Enqueue initial option 1: Start node 0 using an imaginary arriving RED edge
+    queueNode[tail] = 0;
+    queueColor[tail] = RED;
+    queueSteps[tail] = 0;
+    tail++;
+    visited[0][RED] = true;
+    
+    // Enqueue initial option 2: Start node 0 using an imaginary arriving BLUE edge
+    queueNode[tail] = 0;
+    queueColor[tail] = BLUE;
+    queueSteps[tail] = 0;
+    tail++;
+    visited[0][BLUE] = true;
+    
+    // High-speed level wise BFS state graph traversal loop pipelines
+    while (head < tail) {
+        int currNode = queueNode[head];
+        int currColor = queueColor[head];
+        int currSteps = queueSteps[head];
+        head++;
+        
+        // Target optimization: Keep capturing the absolute minimal step paths seen first
+        if (result[currNode] == -1 || currSteps < result[currNode]) {
+            result[currNode] = currSteps;
+        }
+        
+        // If current incoming color was RED, next choice edge MUST be BLUE
+        if (currColor == RED) {
+            for (int e = blueHeads[currNode]; e != -1; e = blueList[e].next) {
+                int neighbor = blueList[e].to;
+                if (!visited[neighbor][BLUE]) {
+                    visited[neighbor][BLUE] = true;
+                    queueNode[tail] = neighbor;
+                    queueColor[tail] = BLUE;
+                    queueSteps[tail] = currSteps + 1;
+                    tail++;
+                }
+            }
+        } 
+        // If current incoming color was BLUE, next choice edge MUST be RED
+        else {
+            for (int e = redHeads[currNode]; e != -1; e = redList[e].next) {
+                int neighbor = redList[e].to;
+                if (!visited[neighbor][RED]) {
+                    visited[neighbor][RED] = true;
+                    queueNode[tail] = neighbor;
+                    queueColor[tail] = RED;
+                    queueSteps[tail] = currSteps + 1;
+                    tail++;
+                }
+            }
+        }
+    }
+    
+    // Explicit dynamic heap cleanups tracking standard layouts leaks blocks
+    for (int i = 0; i < n; i++) free(visited[i]);
+    free(visited);
+    free(redHeads);
+    free(blueHeads);
+    free(redList);
+    free(blueList);
+    free(queueNode);
+    free(queueColor);
+    free(queueSteps);
+    
+    return result;
+}
