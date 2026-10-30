@@ -1,0 +1,43 @@
+int countStaircase(int* nums, int numsSize) {
+    int ans = 0;
+
+    int freq[100001] = {0};
+    int target[100001] = {0};
+    int seen[100001] = {0};
+
+    for (int i = 0; i < numsSize; i++) {
+        int distinct = 0;
+        int bad = 0;
+
+        for (int j = i; j < numsSize; j++) {
+            int x = nums[j];
+
+            if (seen[x] != i + 1) {
+                seen[x] = i + 1;
+                freq[x] = 0;
+                target[x] = ++distinct;
+                bad++;
+            }
+
+            if (freq[x] != target[x]) {
+                bad--;
+            }
+
+            freq[x]++;
+
+            if (freq[x] != target[x]) {
+                bad++;
+            }
+
+            if (freq[x] > target[x]) {
+                break;
+            }
+
+            if (bad == 0) {
+                ans++;
+            }
+        }
+    }
+
+    return ans;
+}
