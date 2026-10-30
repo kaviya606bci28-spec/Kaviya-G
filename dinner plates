@@ -1,0 +1,211 @@
+#include <stdlib.h>
+
+#define MAX_STACKS 200005
+
+typedef struct {
+    int **stacks;
+    int *sizes;
+    int *heap;
+    int *pos;
+    int capacity;
+    int heapSize;
+    int rightmost;
+} DinnerPlates;
+
+void swapHeap(DinnerPlates* obj, int a, int b) {
+    int temp = obj->heap[a];
+    obj->heap[a] = obj->heap[b];
+    obj->heap[b] = temp;
+
+    obj->pos[obj->heap[a]] = a;
+    obj->pos[obj->heap[b]] = b;
+}
+
+void siftUp(DinnerPlates* obj, int i) {
+    while (i > 0) {
+        int p = (i - 1) / 2;
+
+        if (obj->heap[p] <= obj->heap[i])
+            break;
+
+        swapHeap(obj, p, i);
+        i = p;
+    }
+}
+
+void siftDown(DinnerPlates* obj, int i) {
+    while (1) {
+        int left = 2 * i + 1;
+        int right = 2 * i + 2;
+        int smallest = i;
+
+        if (left < obj->heapSize &&
+            obj->heap[left] < obj->heap[smallest])
+            smallest = left;
+
+        if (right < obj->heapSize &&
+            obj->heap[right] < obj->heap[smallest])
+            smallest = right;
+
+        if (smallest == i)
+            break;
+
+        swapHeap(obj, i, smallest);
+        i = smallest;
+    }
+}
+
+void heapInsert(DinnerPlates* obj, int index) {
+    if (obj->pos[index] != -1)
+        return;
+
+    if (obj->heapSize >= MAX_STACKS)
+        return;
+
+    int i = obj->heapSize++;
+
+    obj->heap[i] = index;
+    obj->pos[index] = i;
+
+    siftUp(obj, i);
+}
+
+void heapRemove(DinnerPlates* obj, int index) {
+    int i = obj->pos[index];
+
+    if (i == -1)
+        return;
+
+    obj->pos[index] = -1;
+    obj->heapSize--;
+
+    if (i == obj->heapSize)
+        return;
+
+    obj->heap[i] = obj->heap[obj->heapSize];
+    obj->pos[obj->heap[i]] = i;
+
+    if (i > 0 &&
+        obj->heap[i] < obj->heap[(i - 1) / 2]) {
+        siftUp(obj, i);
+    } else {
+        siftDown(obj, i);
+    }
+}
+
+DinnerPlates* dinnerPlatesCreate(int capacity) {
+    DinnerPlates* obj =
+        (DinnerPlates*)malloc(sizeof(DinnerPlates));
+
+    obj->capacity = capacity;
+    obj->heapSize = 0;
+    obj->rightmost = -1;
+
+    obj->stacks =
+        (int**)calloc(MAX_STACKS, sizeof(int*));
+
+    obj->sizes =
+        (int*)calloc(MAX_STACKS, sizeof(int));
+
+    obj->heap =
+        (int*)malloc(MAX_STACKS * sizeof(int));
+
+    obj->pos =
+        (int*)malloc(MAX_STACKS * sizeof(int));
+
+    for (int i = 0; i < MAX_STACKS; i++) {
+        obj->pos[i] = -1;
+    }
+
+    heapInsert(obj, 0);
+
+    return obj;
+}
+
+void dinnerPlatesPush(DinnerPlates* obj, int val) {
+
+    int index;
+    int isNew = 0;
+
+    if (obj->heapSize > 0) {
+        index = obj->heap[0];
+    } else {
+        index = obj->rightmost + 1;
+        isNew = 1;
+    }
+
+    if (index >= MAX_STACKS)
+        return;
+
+    if (obj->stacks[index] == NULL) {
+        obj->stacks[index] =
+            (int*)malloc(obj->capacity * sizeof(int));
+    }
+
+    obj->stacks[index][obj->sizes[index]++] = val;
+
+    if (index > obj->rightmost) {
+        obj->rightmost = index;
+    }
+
+    if (obj->sizes[index] == obj->capacity) {
+        heapRemove(obj, index);
+    } else if (isNew) {
+        heapInsert(obj, index);
+    }
+}
+
+int dinnerPlatesPopAtStack(
+    DinnerPlates* obj, int index) {
+
+    if (index < 0 || index >= MAX_STACKS ||
+        obj->sizes[index] == 0) {
+        return -1;
+    }
+
+    int wasFull =
+        (obj->sizes[index] == obj->capacity);
+
+    int value =
+        obj->stacks[index][--obj->sizes[index]];
+
+    if (wasFull) {
+        heapInsert(obj, index);
+    }
+
+    if (index == obj->rightmost &&
+        obj->sizes[index] == 0) {
+
+        while (obj->rightmost >= 0 &&
+               obj->sizes[obj->rightmost] == 0) {
+            obj->rightmost--;
+        }
+    }
+
+    return value;
+}
+
+int dinnerPlatesPop(DinnerPlates* obj) {
+
+    if (obj->rightmost == -1)
+        return -1;
+
+    return dinnerPlatesPopAtStack(
+        obj, obj->rightmost);
+}
+
+void dinnerPlatesFree(DinnerPlates* obj) {
+
+    if (obj == NULL)
+        return;
+
+    for (int i = 0; i < MAX_STACKS; i++) {
+        free(obj->stacks[i]);
+    }
+
+    free(obj->stacks);
+    free(obj->sizes);
+    free(obj->heap);
+    free(obj->pos);
+    free(obj);
+}
